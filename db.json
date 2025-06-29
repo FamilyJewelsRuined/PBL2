@@ -1,0 +1,76 @@
+{
+  "kategori-ukt": [
+    {
+      "id_kategori_ukt": 1,
+      "nama_kategori": "Kategori 1",
+      "nominal": 5000000
+    },
+    {
+      "id_kategori_ukt": 2,
+      "nama_kategori": "Kategori 2",
+      "nominal": 7500000
+    },
+    {
+      "id_kategori_ukt": 3,
+      "nama_kategori": "Kategori 3",
+      "nominal": 10000000
+    }
+  ],
+  "mahasiswa": [
+    {
+      "nim": "2021001",
+      "nama": "John Doe",
+      "status_aktif": "AKTIF",
+      "id_kategori_ukt": 1
+    },
+    {
+      "nim": "2021002",
+      "nama": "Jane Smith",
+      "status_aktif": "AKTIF",
+      "id_kategori_ukt": 2
+    },
+    {
+      "nim": "2021003",
+      "nama": "Bob Johnson",
+      "status_aktif": "TIDAK AKTIF",
+      "id_kategori_ukt": 3
+    }
+  ],
+  "tagihan": [
+    {
+      "id_tagihan": 1,
+      "nim": "2021001",
+      "semester": "2023/2024-1",
+      "tanggal_jatuh_tempo": "2024-02-15",
+      "nominal": 5000000,
+      "status_pembayaran": "BELUM LUNAS"
+    },
+    {
+      "id_tagihan": 2,
+      "nim": "2021002",
+      "semester": "2023/2024-1",
+      "tanggal_jatuh_tempo": "2024-02-15",
+      "nominal": 7500000,
+      "status_pembayaran": "LUNAS"
+    }
+  ],
+  "pembayaran": [
+    {
+      "id_pembayaran": 1,
+      "id_tagihan": 2,
+      "tanggal_bayar": "2024-01-15",
+      "bukti_pembayaran": "https://example.com/proof1.jpg",
+      "status_verifikasi": "TERVERIFIKASI"
+    }
+  ],
+  "log-status-mahasiswa": [
+    {
+      "id_log": 1,
+      "nim": "2021003",
+      "status_awal": "AKTIF",
+      "status_baru": "TIDAK AKTIF",
+      "tanggal_perubahan": "2024-01-01T10:00:00",
+      "keterangan": "Student took a leave of absence"
+    }
+  ]
+} 
