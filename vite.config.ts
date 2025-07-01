@@ -1,10 +1,22 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['@tanstack/react-query'],
+  server: {
+    proxy: {
+      '/api-mahasiswa': {
+        target: 'https://ti054c03.agussbn.my.id',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-mahasiswa/, '/api/mahasiswa'),
+        secure: false,
+      },
+      '/api-tambah-mahasiswa': {
+        target: 'https://ti054c03.agussbn.my.id',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api-tambah-mahasiswa/, '/api/tambah-mahasiswa'),
+      },
+    },
   },
-})
+});

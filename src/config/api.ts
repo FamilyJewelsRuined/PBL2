@@ -16,4 +16,10 @@ export const API_ENDPOINTS = {
   LOG_STATUS_MAHASISWA: '/log-status-mahasiswa',
   LOG_PERUBAHAN_SEMESTER: '/log-perubahan-semester',
   USER: '/user',
+};
+
+// New API from neighboring group
+export const STUDENT_API_BASE_URL = '/api-mahasiswa';
+export const STUDENT_API_ENDPOINTS = {
+  MAHASISWA: '/mahasiswa',
 }; 

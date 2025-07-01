@@ -22,6 +22,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { getStudents } from '../services/student'; // service API kelompok sebelah
 
 const API_URL = 'https://ti054c04.agussbn.my.id/api';
 
@@ -62,10 +63,7 @@ function Bills() {
 
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/masters`, { headers: getAuthHeaders() });
-      return response.data.data || [];
-    },
+    queryFn: getStudents,
   });
 
   const { data: categoriesRaw = [], isLoading: categoriesLoading } = useQuery({
@@ -457,9 +455,10 @@ function Bills() {
                 }
                 required
               >
-                {students?.map((student) => (
-                  <MenuItem key={student.nim} value={student.nim}>
-                    {student.nim} - {student.nama}
+                <MenuItem value="">Pilih Mahasiswa</MenuItem>
+                {!studentsLoading && students && students.map((mhs) => (
+                  <MenuItem key={mhs.nim} value={mhs.nim}>
+                    {mhs.nim} - {mhs.nama}
                   </MenuItem>
                 ))}
               </Select>

@@ -18,15 +18,8 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { Edit as EditIcon, Search as SearchIcon, Delete as DeleteIcon } from '@mui/icons-material';
-
-const API_URL = 'https://ti054c04.agussbn.my.id/api';
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { getStudents, createStudent, updateStudent, deleteStudent } from '../services/student';
 
 function Students() {
   const [open, setOpen] = useState(false);
@@ -34,11 +27,12 @@ function Students() {
   const [formData, setFormData] = useState({
     nim: '',
     nama: '',
-    status_aktif: 'AKTIF',
-    id_kategori_ukt: '',
-    semester: '',
-    jenis_program: '',
-    keterangan_status: '',
+    email: '',
+    no_hp: '',
+    tempat_lahir: '',
+    tanggal_lahir: '',
+    alamat: '',
+    image: '',
   });
   const [searchText, setSearchText] = useState('');
   const [error, setError] = useState('');
@@ -47,35 +41,11 @@ function Students() {
 
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/masters`, {
-        headers: getAuthHeaders(),
-      });
-      console.log('API /masters response:', response.data);
-      return response.data.data || [];
-    },
-  });
-
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['uktCategories'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/kategori-ukt`, {
-        headers: getAuthHeaders(),
-      });
-      return response.data.data.data || [];
-    },
+    queryFn: getStudents,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (newStudent) => {
-      const response = await axios.post(`${API_URL}/masters`, newStudent, {
-        headers: getAuthHeaders(),
-      });
-      if (response.data.status === 'error') {
-        throw new Error(response.data.message || 'Gagal menambah mahasiswa.');
-      }
-      return response.data;
-    },
+    mutationFn: createStudent,
     onSuccess: () => {
       queryClient.invalidateQueries(['students']);
       handleClose();
@@ -102,17 +72,7 @@ function Students() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (updatedStudent) => {
-      const response = await axios.put(
-        `${API_URL}/masters/${updatedStudent.nim}`,
-        updatedStudent,
-        { headers: getAuthHeaders() }
-      );
-      if (response.data.status === 'error') {
-        throw new Error(response.data.message || 'Gagal mengedit mahasiswa.');
-      }
-      return response.data;
-    },
+    mutationFn: ({ nim, ...data }) => updateStudent(nim, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['students']);
       handleClose();
@@ -139,15 +99,7 @@ function Students() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (nim) => {
-      const response = await axios.delete(`${API_URL}/masters/${nim}`, {
-        headers: getAuthHeaders(),
-      });
-      if (response.data.status === 'error') {
-        throw new Error(response.data.message || 'Gagal menghapus mahasiswa.');
-      }
-      return response.data;
-    },
+    mutationFn: deleteStudent,
     onSuccess: () => {
       queryClient.invalidateQueries(['students']);
     },
@@ -161,22 +113,24 @@ function Students() {
       setFormData({
         nim: student.nim,
         nama: student.nama,
-        status_aktif: student.status_aktif === true || student.status_aktif === 'AKTIF' ? 'AKTIF' : 'TIDAK AKTIF',
-        id_kategori_ukt: student.id_kategori_ukt,
-        semester: student.semester || '',
-        jenis_program: student.jenis_program || '',
-        keterangan_status: student.keterangan_status || '',
+        email: student.email,
+        no_hp: student.no_hp,
+        tempat_lahir: student.tempat_lahir,
+        tanggal_lahir: student.tanggal_lahir ? student.tanggal_lahir.split('T')[0] : '',
+        alamat: student.alamat,
+        image: student.image || '',
       });
     } else {
       setSelectedStudent(null);
       setFormData({
         nim: '',
         nama: '',
-        status_aktif: 'AKTIF',
-        id_kategori_ukt: '',
-        semester: '',
-        jenis_program: '',
-        keterangan_status: '',
+        email: '',
+        no_hp: '',
+        tempat_lahir: '',
+        tanggal_lahir: '',
+        alamat: '',
+        image: '',
       });
     }
     setOpen(true);
@@ -188,11 +142,12 @@ function Students() {
     setFormData({
       nim: '',
       nama: '',
-      status_aktif: 'AKTIF',
-      id_kategori_ukt: '',
-      semester: '',
-      jenis_program: '',
-      keterangan_status: '',
+      email: '',
+      no_hp: '',
+      tempat_lahir: '',
+      tanggal_lahir: '',
+      alamat: '',
+      image: '',
     });
     setError('');
   };
@@ -203,11 +158,7 @@ function Students() {
 
     const dataToSubmit = {
       ...formData,
-      semester: formData.semester ? parseInt(formData.semester, 10) : null,
-      id_kategori_ukt: formData.id_kategori_ukt
-        ? parseInt(formData.id_kategori_ukt, 10)
-        : null,
-      status_aktif: formData.status_aktif === 'AKTIF',
+      tanggal_lahir: formData.tanggal_lahir ? new Date(formData.tanggal_lahir).toISOString() : '',
     };
 
     console.log('Data to submit:', dataToSubmit);
@@ -226,7 +177,9 @@ function Students() {
   const filteredStudents = useMemo(() => {
     if (!students) return [];
     return students.filter((student) =>
-      student.nama.toLowerCase().includes(searchText.toLowerCase())
+      student.nama.toLowerCase().includes(searchText.toLowerCase()) ||
+      student.nim.toLowerCase().includes(searchText.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchText.toLowerCase())
     );
   }, [students, searchText]);
 
@@ -239,37 +192,37 @@ function Students() {
     },
     { field: 'nim', headerName: 'NIM', width: 130 },
     { field: 'nama', headerName: 'Nama', width: 200 },
-    { field: 'semester', headerName: 'Semester', width: 100 },
-    { field: 'jenis_program', headerName: 'Jenis Program', width: 150 },
+    { field: 'email', headerName: 'Email', width: 250 },
+    { field: 'no_hp', headerName: 'No. HP', width: 130 },
+    { field: 'tempat_lahir', headerName: 'Tempat Lahir', width: 150 },
     {
-      field: 'kategori_ukt',
-      headerName: 'ID Kategori',
-      width: 150,
+      field: 'tanggal_lahir',
+      headerName: 'Tanggal Lahir',
+      width: 130,
       valueGetter: (params) => {
-        const category = categories?.find(
-          (cat) => cat.id_kategori_ukt === params.row.id_kategori_ukt
-        );
-        return category ? category.nama_kategori : '';
+        if (!params.value) return '';
+        return new Date(params.value).toLocaleDateString('id-ID');
       },
     },
+    { field: 'alamat', headerName: 'Alamat', width: 200 },
     {
-      field: 'status_aktif',
-      headerName: 'Status Keaktifkan',
-      width: 150,
+      field: 'image',
+      headerName: 'Foto',
+      width: 100,
       renderCell: (params) => (
         <Box
+          component="img"
+          src={params.value || '/default-avatar.png'}
+          alt="Student"
           sx={{
-            backgroundColor: params.value === 'AKTIF' ? '#4caf50' : '#f44336',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            objectFit: 'cover',
           }}
-        >
-          {params.value}
-        </Box>
+        />
       ),
     },
-    { field: 'keterangan_status', headerName: 'Keterangan', width: 200 },
     {
       field: 'actions',
       headerName: 'Edit',
@@ -307,7 +260,7 @@ function Students() {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5">Master</Typography>
+        <Typography variant="h5">Master Mahasiswa</Typography>
         <Box>
           <TextField
             label="Cari Mahasiswa"
@@ -340,7 +293,7 @@ function Students() {
         <DataGrid
           rows={filteredStudents}
           columns={columns}
-          loading={studentsLoading || categoriesLoading}
+          loading={studentsLoading}
           getRowId={(row) => row.nim}
           pageSize={5}
           rowsPerPageOptions={[5]}
@@ -348,92 +301,105 @@ function Students() {
         />
       </Paper>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>
           {selectedStudent ? 'Edit Student' : 'Add New Student'}
         </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="NIM"
-              fullWidth
-              value={formData.nim}
-              onChange={(e) =>
-                setFormData({ ...formData, nim: e.target.value })
-              }
-              required
-              disabled={!!selectedStudent}
-            />
-            <TextField
-              margin="dense"
-              label="Nama"
-              fullWidth
-              value={formData.nama}
-              onChange={(e) =>
-                setFormData({ ...formData, nama: e.target.value })
-              }
-              required
-            />
-            <FormControl fullWidth margin="dense">
-              <InputLabel>Status Keaktifkan</InputLabel>
-              <Select
-                value={formData.status_aktif}
-                label="Status Keaktifkan"
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="NIM"
+                fullWidth
+                value={formData.nim}
                 onChange={(e) =>
-                  setFormData({ ...formData, status_aktif: e.target.value })
-                }
-              >
-                <MenuItem value="AKTIF">Aktif</MenuItem>
-                <MenuItem value="TIDAK AKTIF">Tidak Aktif</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="dense">
-              <InputLabel>Kategori UKT</InputLabel>
-              <Select
-                value={formData.id_kategori_ukt}
-                label="Kategori UKT"
-                onChange={(e) =>
-                  setFormData({ ...formData, id_kategori_ukt: e.target.value })
+                  setFormData({ ...formData, nim: e.target.value })
                 }
                 required
-              >
-                {categories?.map((cat) => (
-                  <MenuItem key={cat.id_kategori_ukt} value={cat.id_kategori_ukt}>
-                    {cat.nama_kategori}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              margin="dense"
-              label="Semester"
-              type="number"
-              fullWidth
-              value={formData.semester}
-              onChange={(e) =>
-                setFormData({ ...formData, semester: e.target.value })
-              }
-            />
-            <TextField
-              margin="dense"
-              label="Jenis Program"
-              fullWidth
-              value={formData.jenis_program}
-              onChange={(e) =>
-                setFormData({ ...formData, jenis_program: e.target.value })
-              }
-            />
-            <TextField
-              margin="dense"
-              label="Keterangan Status"
-              fullWidth
-              value={formData.keterangan_status}
-              onChange={(e) =>
-                setFormData({ ...formData, keterangan_status: e.target.value })
-              }
-            />
+                disabled={!!selectedStudent}
+              />
+              <TextField
+                margin="dense"
+                label="Nama"
+                fullWidth
+                value={formData.nama}
+                onChange={(e) =>
+                  setFormData({ ...formData, nama: e.target.value })
+                }
+                required
+              />
+              <TextField
+                margin="dense"
+                label="Email"
+                type="email"
+                fullWidth
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+              />
+              <TextField
+                margin="dense"
+                label="No. HP"
+                fullWidth
+                value={formData.no_hp}
+                onChange={(e) =>
+                  setFormData({ ...formData, no_hp: e.target.value })
+                }
+                required
+              />
+              <TextField
+                margin="dense"
+                label="Tempat Lahir"
+                fullWidth
+                value={formData.tempat_lahir}
+                onChange={(e) =>
+                  setFormData({ ...formData, tempat_lahir: e.target.value })
+                }
+                required
+              />
+              <TextField
+                margin="dense"
+                label="Tanggal Lahir"
+                type="date"
+                fullWidth
+                value={formData.tanggal_lahir}
+                onChange={(e) =>
+                  setFormData({ ...formData, tanggal_lahir: e.target.value })
+                }
+                required
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+              <TextField
+                margin="dense"
+                label="Alamat"
+                fullWidth
+                multiline
+                rows={3}
+                value={formData.alamat}
+                onChange={(e) =>
+                  setFormData({ ...formData, alamat: e.target.value })
+                }
+                required
+                sx={{ gridColumn: '1 / -1' }}
+              />
+              <TextField
+                margin="dense"
+                label="Image URL"
+                fullWidth
+                value={formData.image}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
+                placeholder="https://example.com/image.jpg"
+                sx={{ gridColumn: '1 / -1' }}
+              />
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>

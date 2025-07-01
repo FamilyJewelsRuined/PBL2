@@ -152,28 +152,10 @@ function Dashboard() {
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Activity
-            </Typography>
-            <Typography color="textSecondary">
-              {isLoading
-                ? 'Loading...'
-                : `Last 24 hours: ${pendingPayments} payments pending verification`}
-            </Typography>
-          </Paper>
+          
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Quick Actions
-            </Typography>
-            <Typography color="textSecondary">
-              {isLoading
-                ? 'Loading...'
-                : `${unpaidBills} bills need attention`}
-            </Typography>
-          </Paper>
+          
         </Grid>
       </Grid>
     </Box>
